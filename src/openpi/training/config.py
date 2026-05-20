@@ -983,7 +983,8 @@ _CONFIGS = [
             repo_id="bartek-niedzielski/pick_and_place_40",
             base_config=DataConfig(prompt_from_task=True),
             assets=AssetsConfig(
-                assets_dir="gs://openpi-assets/checkpoints/pi05_base/assets",
+                # assets_dir="gs://openpi-assets/checkpoints/pi05_base/assets", # reuse the original pi05 norm stats
+                assets_dir="gs://openpi-assets/checkpoints/pi05_droid/assets",  # reuse the original droid norm stats since we are using the droid asset for this dataset
                 # asset_id="franka",
                 asset_id="droid",
                 # check franka for asset_id if you are using the original panda dataset with 7-dim joint position actions; 
