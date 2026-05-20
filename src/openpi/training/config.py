@@ -475,10 +475,10 @@ class LeRobotPandaDataConfig(DataConfigFactory):
             inputs=[
                 _transforms.RepackTransform(
                     {
-                        "observation/exterior_image_1_left": "exterior_image_1_left",
-                        "observation/wrist_image_left": "wrist_image_left",
-                        "observation/joint_position": "joint_position",
-                        "observation/gripper_position": "gripper_position",
+                        "exterior_image_1_left": "exterior_image_1_left",
+                        "wrist_image_left": "wrist_image_left",
+                        "joint_position": "joint_position",
+                        "gripper_position": "gripper_position", 
                         "actions": "actions",
                         "prompt": "prompt",
                     }
