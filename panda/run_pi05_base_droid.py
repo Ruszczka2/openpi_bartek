@@ -19,10 +19,15 @@ ROBOT_PASS = 'Frankenstein'
 
 #place the green cube in the yellow area task
 INSTRUCTION = "place the green cube in the yellow area"
-CHECKPOINT_DIR = "/home/student/ft/checkpoints/pi05_base_droid/100/"
 
 print("[*] Loading local fine-tuned Pi05 Base droid model...")
-pi0_config = _config.get_config("pi05_panda")
+# CHECKPOINT_DIR = "/home/student/ft/checkpoints/pi05_base_droid/150/"
+CHECKPOINT_DIR = "/home/student/ft/checkpoints/pi05_base_franka/150/"
+pi0_config = _config.get_config("pi05_panda") #remember to check config.py if it matches
+
+# CHECKPOINT_DIR = download.maybe_download("gs://openpi-assets/checkpoints/pi05_base")
+# pi0_config = _config.get_config("pi05_droid")
+
 policy = policy_config.create_trained_policy(pi0_config, CHECKPOINT_DIR)
 
 # Physics & Control Parameters
@@ -32,9 +37,9 @@ DT = 1.0 / CONTROL_HZ
 # --- CAMERA CONFIGURATION ---
 EXTERIOR_CAMERA_INDEX = 2
 WRIST_CAMERA_INDEX = 0
-MIN_STEPS_PER_CHUNK = 6
+MIN_STEPS_PER_CHUNK = 6 # 3 doesnt work, 6 base value, 9 works similar to 6 needs more testing, 12 works less good
 
-TEST_VISION_INFLUENCE = True
+TEST_VISION_INFLUENCE = False
 
 logging.basicConfig(level=logging.INFO)
 
@@ -186,7 +191,7 @@ def control_loop():
 
             step_index += 1
             panda.move_to_joint_position(raw_target_joints, speed_factor=0.1)
-            print(f'grip: {grip}')
+            #print(f'grip: {grip}')
             
             # Gripper
             if grip >= 0.35 and latest_grip == 0.0:
