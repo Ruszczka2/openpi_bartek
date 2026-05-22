@@ -19,15 +19,10 @@ ROBOT_PASS = 'Frankenstein'
 
 #place the green cube in the yellow area task
 INSTRUCTION = "place the green cube in the yellow area"
+CHECKPOINT_DIR = download.maybe_download("gs://openpi-assets/checkpoints/pi05_base")#"/home/student/ft/checkpoints/pi05_base_droid/150/"
 
 print("[*] Loading local fine-tuned Pi05 Base droid model...")
-# CHECKPOINT_DIR = "/home/student/ft/checkpoints/pi05_base_droid/150/"
-CHECKPOINT_DIR = "/home/student/ft/checkpoints/pi05_base_franka/150/"
-pi0_config = _config.get_config("pi05_panda") #remember to check config.py if it matches
-
-# CHECKPOINT_DIR = download.maybe_download("gs://openpi-assets/checkpoints/pi05_base")
-# pi0_config = _config.get_config("pi05_droid")
-
+pi0_config = _config.get_config("pi05_droid")
 policy = policy_config.create_trained_policy(pi0_config, CHECKPOINT_DIR)
 
 # Physics & Control Parameters
@@ -37,7 +32,7 @@ DT = 1.0 / CONTROL_HZ
 # --- CAMERA CONFIGURATION ---
 EXTERIOR_CAMERA_INDEX = 2
 WRIST_CAMERA_INDEX = 0
-MIN_STEPS_PER_CHUNK = 6 # 3 doesnt work, 6 base value, 9 works similar to 6 needs more testing, 12 works less good
+MIN_STEPS_PER_CHUNK = 6
 
 TEST_VISION_INFLUENCE = False
 
@@ -90,20 +85,20 @@ def vision_loop(cap_ext, cap_wrist, policy):
 
             # 1. NORMAL OBSERVATION (With Vision)
             example_with_vision = {
-                "exterior_image_1_left": image_ext_rgb,
-                "wrist_image_left": image_wrist_rgb,
-                "gripper_position": np.array([current_grip_state], dtype=np.float32),
-                "joint_position": current_joints,
+                "observation/exterior_image_1_left": image_ext_rgb,
+                "observation/wrist_image_left": image_wrist_rgb,
+                "observation/gripper_position": np.array([current_grip_state], dtype=np.float32),
+                "observation/joint_position": current_joints,
                 "prompt": INSTRUCTION
             }
 
             if TEST_VISION_INFLUENCE:
             # 2. BLIND OBSERVATION (Without Vision)
                 example_without_vision = {
-                    "exterior_image_1_left": blank_ext,
-                    "wrist_image_left": blank_wrist,
-                    "gripper_position": np.array([current_grip_state], dtype=np.float32),
-                    "joint_position": current_joints,
+                    "observation/exterior_image_1_left": blank_ext,
+                    "observation/wrist_image_left": blank_wrist,
+                    "observation/gripper_position": np.array([current_grip_state], dtype=np.float32),
+                    "observation/joint_position": current_joints,
                     "prompt": INSTRUCTION
                 }
 
@@ -183,7 +178,7 @@ def control_loop():
                 safe_pos = predicted_pose[:3, 3]
                 if (safe_pos[0] > 0.8 or safe_pos[0] < 0 or 
                     safe_pos[1] > 0.3 or safe_pos[1] < -0.3 or 
-                    safe_pos[2] > 0.65 or safe_pos[2] < 0.05): #have to allow up to 0.035 for lying down cube
+                    safe_pos[2] > 0.65 or safe_pos[2] < 0.05):
                     print(f"outside of bounding box: {safe_pos}")
                     continue
             except Exception:
@@ -240,10 +235,10 @@ if __name__ == "__main__":
         dummy_grip = np.zeros(1, dtype=np.float32)
 
         warmup_example = {
-            "exterior_image_1_left": image_ext_rgb,
-            "wrist_image_left": image_wrist_rgb,
-            "gripper_position": dummy_grip,
-            "joint_position": dummy_joints,
+            "observation/exterior_image_1_left": image_ext_rgb,
+            "observation/wrist_image_left": image_wrist_rgb,
+            "observation/gripper_position": dummy_grip,
+            "observation/joint_position": dummy_joints,
             "prompt": INSTRUCTION
         }
         

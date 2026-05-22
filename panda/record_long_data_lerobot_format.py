@@ -7,6 +7,7 @@ from pathlib import Path
 import panda_py
 from panda_py import libfranka
 from lerobot.common.datasets.lerobot_dataset import LeRobotDataset
+import gc
 
 # --- Configuration ---
 hostname = '172.16.0.2'
@@ -98,15 +99,15 @@ if __name__ == '__main__':
     gripper.homing()
     
     # --- DROID-LeRobot v2.1 Schema ---
-    dataset_dir = Path("outputs/long_pick_and_place")
+    dataset_dir = Path("outputs/long_laying_pick_and_place")
     
     if dataset_dir.exists():
         print("[*] Found existing dataset. Loading it to append a new episode...")
-        dataset = LeRobotDataset("local/long_pick_and_place", root=dataset_dir)
+        dataset = LeRobotDataset("local/long_laying_pick_and_place", root=dataset_dir)
     else:
         print("[*] Creating new dataset folder...")
         dataset = LeRobotDataset.create(
-            repo_id="local/long_pick_and_place",
+            repo_id="local/long_laying_pick_and_place",
             root=dataset_dir,
             features={
                 "exterior_image_1_left": {"dtype": "video", "shape": (480, 640, 3), "names": ["height", "width", "channel"]},
@@ -157,6 +158,7 @@ if __name__ == '__main__':
     print("RECORDING STARTED - Warming up camera exposure...")
     trajectory_buffer = []
     is_recording = True
+    gc.disable()
     rec_thread = threading.Thread(target=recording_thread, args=(panda, gripper, MAX_GRIPPER_WIDTH, cap_ext, cap_wrist))
     rec_thread.start()
     
@@ -168,16 +170,7 @@ if __name__ == '__main__':
     rec_thread.start()
 
     try:
-        # print("Moving to Position 1...")
-        # panda.move_to_joint_position(positions[0], speed_factor=0.02)
-        # # print(panda.q)
-        # # print(panda.get_position())
-
-        # print("Moving to Position 2...")
-        # panda.move_to_joint_position(positions[1], speed_factor=0.02)
-        # print(panda.q)
-        # print(panda.get_position())
-
+        print("move to grasp position")
         panda.move_to_joint_position(positions, speed_factor=0.02)
 
         print("Grasping...")
@@ -187,6 +180,7 @@ if __name__ == '__main__':
         pose[2,3] += 0.1
         panda.move_to_pose(pose,speed_factor=0.02)
 
+        # lying cube
         print("move to prep drop area")
         drop_pose = np.array([
             [ 0.99572986, -0.03349188,  0.0859141,   0.62354445],
@@ -202,6 +196,23 @@ if __name__ == '__main__':
             [ 0.0506841,  -0.04531361, -0.99768618,  0.06475505],
             [ 0.0,         0.0,         0.0,         1.0       ]
         ], dtype=np.float64)
+
+        # # standing cube
+        # print("move to prep drop area")
+        # drop_pose = np.array([
+        # [ 0.99425161, -0.10452163, 0.0227973, 0.59643517],
+        # [-0.10405794, -0.99434695, 0.02066037, 0.16699551],
+        # [ 0.02482788, -0.01816937, -0.9995266, 0.19222092],
+        # [ 0.0,          0.0,          0.0,          1.0        ]
+        # ], dtype=np.float64)
+
+        # print("moving to place area")
+        # place_pose = np.array([
+        #     [ 0.99903821, -0.0216673,  0.03786763,  0.61696348],
+        #     [-0.01932619, -0.99793291,  0.0611328,  0.16463854],
+        #     [ 0.03911393, -0.06034217, -0.99741106,  0.1035841],
+        #     [ 0.0,         0.0,         0.0,         1.0       ]
+        # ], dtype=np.float64)
 
         panda.move_to_pose([drop_pose, place_pose], speed_factor=0.02)
 
@@ -229,6 +240,7 @@ if __name__ == '__main__':
         cap_ext.release()
         cap_wrist.release()
         print("RECORDING STOPPED.")
+        gc.enable()
 
     if episode_successful:
         print(f"\nProcessing {len(trajectory_buffer)} frames for LeRobot...")
