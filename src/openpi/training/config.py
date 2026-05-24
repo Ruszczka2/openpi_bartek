@@ -980,11 +980,11 @@ _CONFIGS = [
             max_token_len=180
         ),
         data=LeRobotPandaDataConfig(
-            repo_id="bartek-niedzielski/pick_and_place_40",
+            repo_id="bartek-niedzielski/long_lying_pick_and_place_20",
             base_config=DataConfig(prompt_from_task=True),
             assets=AssetsConfig(
-                # assets_dir="gs://openpi-assets/checkpoints/pi05_base/assets", # reuse the original pi05 norm stats
-                assets_dir="gs://openpi-assets/checkpoints/pi05_droid/assets",  # reuse the original droid norm stats since we are using the droid asset for this dataset
+                assets_dir="gs://openpi-assets/checkpoints/pi05_base/assets", # reuse the original pi05 norm stats
+                # assets_dir="gs://openpi-assets/checkpoints/pi05_droid/assets",  # reuse the original droid norm stats since we are using the droid asset for this dataset
                 # asset_id="franka",
                 asset_id="droid",
                 # check franka for asset_id if you are using the original panda dataset with 7-dim joint position actions; 
@@ -992,12 +992,12 @@ _CONFIGS = [
             ),
         ),
         weight_loader=weight_loaders.CheckpointWeightLoader("gs://openpi-assets/checkpoints/pi05_base/params"),
-        weight_loader=weight_loaders.CheckpointWeightLoader("gs://openpi-assets/checkpoints/pi05_droid/params"),
+        # weight_loader=weight_loaders.CheckpointWeightLoader("gs://openpi-assets/checkpoints/pi05_droid/params"),
         # short training with frequent saves so we can pick out a checkpoint that generalizes well to the target 
         # task before overfitting occurs.
         batch_size=16,
-        num_train_steps=500,
-        lr_schedule=_optimizer.CosineDecaySchedule(warmup_steps=50, peak_lr=2.5e-5, decay_steps=500),
+        num_train_steps=240,
+        lr_schedule=_optimizer.CosineDecaySchedule(warmup_steps=50, peak_lr=2.5e-5, decay_steps=240),
         # think about adopting early stopping based on validation performance for future experiments with small datasets like this one
         log_interval=10,
         save_interval=50,
