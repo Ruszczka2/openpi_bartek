@@ -22,7 +22,8 @@ INSTRUCTION = "place the green cube in the yellow area"
 
 print("[*] Loading local fine-tuned Pi05 Base droid model...")
 # CHECKPOINT_DIR = "/home/student/ft/checkpoints/pi05_base_droid/150/"
-CHECKPOINT_DIR = "/home/student/ft/checkpoints/pi05_base_franka/150/"
+# CHECKPOINT_DIR = "/home/student/ft/checkpoints/pi05_base_droid_standing_10_lr_5e-6_warmup_15/60/"
+CHECKPOINT_DIR = "/home/student/ft/checkpoints/pi05_base_droid_hard_35/350/"
 pi0_config = _config.get_config("pi05_panda") #remember to check config.py if it matches
 
 # CHECKPOINT_DIR = download.maybe_download("gs://openpi-assets/checkpoints/pi05_base")
@@ -56,6 +57,58 @@ desk = None
 pos_ctrl = None
 raw_target_joints = None
 
+# ==========================================
+# THREAD 0: capturing camera view without buffer overflow
+# ==========================================
+class CameraStream:
+    def __init__(self, index):
+        self.cap = cv2.VideoCapture(index)
+        # Force a small buffer size if the driver supports it
+        self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+        
+        if not self.cap.isOpened():
+            raise RuntimeError(f"Could not open camera {index}")
+            
+        self.latest_frame = None
+        self.ret = False
+        self.is_running = True
+        
+        # Start a background thread to clear the buffer
+        self.thread = threading.Thread(target=self._update, daemon=True)
+        self.thread.start()
+
+        timeout = time.time() + 5.0
+        while not self.ret and time.time() < timeout:
+            time.sleep(0.05)
+            
+        if not self.ret:
+            raise RuntimeError(f"Camera {index} started, but failed to grab the first frame.")
+        
+    # --- ADDED: Fixes the AttributeError in your main script ---
+    def isOpened(self):
+        return self.cap.isOpened()
+        
+    def _update(self):
+        while self.is_running:
+            # .read() decodes the frame instantly for the AI
+            ret, frame = self.cap.read()
+            if ret:
+                self.ret = ret
+                self.latest_frame = frame
+                
+            # --- ADDED: CPU Optimization ---
+            # Prevents this thread from consuming 100% of a CPU core, 
+            # leaving more resources for the heavy AI inference.
+            time.sleep(0.001) 
+                
+    def read(self):
+        # Return the most recent frame instantly
+        return self.ret, self.latest_frame
+        
+    def release(self):
+        self.is_running = False
+        self.thread.join(timeout=1.0) # Added a timeout so it doesn't hang indefinitely
+        self.cap.release()
 
 # ==========================================
 # THREAD 1: THE BRAIN (Vision & AI)
@@ -183,7 +236,7 @@ def control_loop():
                 safe_pos = predicted_pose[:3, 3]
                 if (safe_pos[0] > 0.8 or safe_pos[0] < 0 or 
                     safe_pos[1] > 0.3 or safe_pos[1] < -0.3 or 
-                    safe_pos[2] > 0.65 or safe_pos[2] < 0.05): #have to allow up to 0.035 for lying down cube
+                    safe_pos[2] > 0.65 or safe_pos[2] < 0.035): #have to allow up to 0.035 for lying down cube
                     print(f"outside of bounding box: {safe_pos}")
                     continue
             except Exception:
@@ -220,8 +273,10 @@ if __name__ == "__main__":
     
     # --- 1. INITIALIZE AI & CAMERAS FIRST ---
     print(f"[*] Starting Logitech Cameras (Exterior: {EXTERIOR_CAMERA_INDEX}, Wrist: {WRIST_CAMERA_INDEX})...")
-    cap_ext = cv2.VideoCapture(EXTERIOR_CAMERA_INDEX)
-    cap_wrist = cv2.VideoCapture(WRIST_CAMERA_INDEX)
+    # cap_ext = cv2.VideoCapture(EXTERIOR_CAMERA_INDEX)
+    # cap_wrist = cv2.VideoCapture(WRIST_CAMERA_INDEX)
+    cap_ext = CameraStream(EXTERIOR_CAMERA_INDEX)
+    cap_wrist = CameraStream(WRIST_CAMERA_INDEX)
 
     if not cap_ext.isOpened() or not cap_wrist.isOpened():
         print("[!] ERROR: Could not open cameras. Check indices.")

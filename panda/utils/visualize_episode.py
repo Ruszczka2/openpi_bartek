@@ -17,8 +17,8 @@ print(f"[*] Ładowanie datasetu dla epizodu: {args.episode}...")
 
 # 2. Inicjalizacja datasetu
 dataset = LeRobotDataset(
-    repo_id="local/long_laying_pick_and_place",
-    root="/home/student/bartosz_niedzielski/panda/openpi_bartek/outputs/long_laying_pick_and_place"
+    repo_id="local/fast_pick_and_place",
+    root="/home/student/bartosz_niedzielski/panda/openpi_bartek/outputs/fast_pick_and_place"
 )
 
 # 3. Wstrzyknięcie backendu PyAV (rozwiązanie problemu z bibliotekami)

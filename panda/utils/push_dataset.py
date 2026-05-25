@@ -1,14 +1,14 @@
 from lerobot.common.datasets.lerobot_dataset import LeRobotDataset
 
 # 1. Define your paths and names
-local_folder_path = "outputs/long_laying_pick_and_place" 
-target_repo_id = "bartek-niedzielski/long_lying_pick_and_place_10" 
+local_folder_path = "outputs/fast_pick_and_place" 
+target_repo_id = "bartek-niedzielski/fast_pick_and_place_40" 
 
 print(f"Loading local dataset from {local_folder_path}...")
 
 # 2. Load the dataset locally using its internal local ID
 dataset = LeRobotDataset(
-    "local/long_laying_pick_and_place", 
+    "local/fast_pick_and_place", 
     root=local_folder_path
 )
 
