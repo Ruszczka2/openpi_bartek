@@ -23,7 +23,13 @@ INSTRUCTION = "place the green cube in the yellow area"
 print("[*] Loading local fine-tuned Pi05 Base droid model...")
 # CHECKPOINT_DIR = "/home/student/ft/checkpoints/pi05_base_droid/150/"
 # CHECKPOINT_DIR = "/home/student/ft/checkpoints/pi05_base_droid_standing_10_lr_5e-6_warmup_15/60/"
-CHECKPOINT_DIR = "/home/student/ft/checkpoints/pi05_base_droid_hard_35/350/"
+# CHECKPOINT_DIR = "/home/student/ft/checkpoints/pi05_base_droid_fast_40_lr_2.5e-5/200/"
+# CHECKPOINT_DIR = "/home/student/ft/checkpoints/pi05_base_droid_fast_40_lr_2.5e-5/150/"
+# CHECKPOINT_DIR = "/home/student/ft/checkpoints/pi05_base_droid_fast_40_lr_2.5e-5/350/"
+# CHECKPOINT_DIR = "/home/student/ft/checkpoints/pi05_base_droid_fast_40_lr_2.5e-5/499/"
+
+CHECKPOINT_DIR = "/home/student/ft/checkpoints/pi05_base_droid_fast_30_lr_2.5e-5/350/"
+# CHECKPOINT_DIR = "/home/student/ft/checkpoints/pi05_base_droid_fast_30_lr_2.5e-5/200/"
 pi0_config = _config.get_config("pi05_panda") #remember to check config.py if it matches
 
 # CHECKPOINT_DIR = download.maybe_download("gs://openpi-assets/checkpoints/pi05_base")
@@ -49,6 +55,7 @@ state_lock = threading.Lock()
 latest_action_chunk = None 
 is_running = True
 latest_grip = 0.0
+task_start_time = None
 
 # Initialize globals
 gripper = None
@@ -188,6 +195,11 @@ def vision_loop(cap_ext, cap_wrist, policy):
             combined_view = np.hstack((image_ext_rgb, image_wrist_resized))
             display_frame = cv2.cvtColor(combined_view, cv2.COLOR_RGB2BGR)
 
+            if task_start_time is not None:
+                elapsed_time = time.time() - task_start_time
+                cv2.putText(display_frame, f"Time: {elapsed_time:.1f}s", (20, 40), 
+                            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
+
             try:
                 cv2.imshow("Robot Cameras (Left: Ext | Right: Wrist)", display_frame)
                 if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -236,7 +248,7 @@ def control_loop():
                 safe_pos = predicted_pose[:3, 3]
                 if (safe_pos[0] > 0.8 or safe_pos[0] < 0 or 
                     safe_pos[1] > 0.3 or safe_pos[1] < -0.3 or 
-                    safe_pos[2] > 0.65 or safe_pos[2] < 0.035): #have to allow up to 0.035 for lying down cube
+                    safe_pos[2] > 0.65 or safe_pos[2] < 0.02): #have to allow up to 0.035 for lying down cube
                     print(f"outside of bounding box: {safe_pos}")
                     continue
             except Exception:
@@ -331,6 +343,11 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"[*] Fatal Error connecting to Robot: {e}")
         exit(1)
+
+    #timer
+    # global task_start_time
+    task_start_time = time.time()
+    print("\n[Timer] Task timer started! Press Ctrl+C when the cube is placed.")
     
     # --- 4. START THREADS ---
     brain_thread = threading.Thread(target=vision_loop, args=(cap_ext, cap_wrist, policy))
@@ -345,6 +362,8 @@ if __name__ == "__main__":
             muscle_thread.join(timeout=0.1)
     except KeyboardInterrupt:
         print("\n[*] Ctrl+C detected! Signaling threads to shut down safely...")
+        final_time = time.time() - task_start_time
+        print(f"[*] TASK COMPLETED IN: {final_time:.2f} seconds")
         is_running = False 
     
     brain_thread.join()
