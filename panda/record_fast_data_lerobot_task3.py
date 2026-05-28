@@ -202,13 +202,6 @@ if __name__ == '__main__':
         #     [ 0.0,         0.0,         0.0,         1.0       ]
         # ], dtype=np.float64)
 
-        print("releasing cube at start position")
-        gripper.move(width=0.08, speed=0.1)
-
-        pose = panda.get_pose()
-        pose[2,3] += 0.08
-        panda.move_to_pose(pose, speed_factor=0.1)
-
     except Exception as e:
         print(f"\n[!] ERROR DETECTED DURING REPLAY: {e}")
         print("[!] Skipping dataset save for this corrupted episode.")
