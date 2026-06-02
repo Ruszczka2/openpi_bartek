@@ -2,7 +2,8 @@
 assets/
 checkpoints/
 data/
-wandb/
+wandb
+panda/outputs/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -145,6 +146,9 @@ venv.bak/
 
 # mkdocs documentation
 /site
+
+# Hugging Face
+.hf_home/
 
 # mypy
 .mypy_cache/

@@ -40,6 +40,8 @@ dependencies = [
     "polars>=1.30.0",
     "huggingface-hub[cli]>=0.32.3",
     "panda-python>=0.8.1",
+    "requests>=2.32.3",
+    "dotenv>=0.9.9",
 ]
 
 

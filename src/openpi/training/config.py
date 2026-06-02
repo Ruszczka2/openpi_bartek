@@ -1012,6 +1012,47 @@ _CONFIGS = [
         policy_metadata={"reset_pose": [0.014956191182136536, -0.7276245951652527, -0.013290399685502052, -2.630627393722534, -0.002800906077027321, 1.8845188617706299, 0.7778761386871338]}
     ),
     TrainConfig(
+        name="pi05_panda_multi",
+        model=pi0_config.Pi0Config(
+            pi05=True,
+            action_dim=32,
+            action_horizon=15,
+            max_token_len=180
+        ),
+        data=LeRobotPandaDataConfig(
+            repo_id="Ruszczka/fast_3_tasks_merged",
+            base_config=DataConfig(prompt_from_task=True),
+            assets=AssetsConfig(
+                assets_dir="gs://openpi-assets/checkpoints/pi05_base/assets", # reuse the original pi05 norm stats
+                # assets_dir="gs://openpi-assets/checkpoints/pi05_droid/assets",  # reuse the original droid norm stats since we are using the droid asset for this dataset
+
+                # asset_id="franka",
+                asset_id="droid",
+                # check franka for asset_id if you are using the original panda dataset with 7-dim joint position actions; 
+                # check droid if you are using the new droid dataset with 7-dim joint velocity actions
+            ),
+        ),
+        project_name="physical-ai-panda",
+
+        weight_loader=weight_loaders.CheckpointWeightLoader("gs://openpi-assets/checkpoints/pi05_base/params"),
+        # weight_loader=weight_loaders.CheckpointWeightLoader("gs://openpi-assets/checkpoints/pi05_droid/params"),
+        # short training with frequent saves so we can pick out a checkpoint that generalizes well to the target 
+        # task before overfitting occurs.
+        batch_size=16,
+        # for slower robot
+        # num_train_steps=240,
+        # lr_schedule=_optimizer.CosineDecaySchedule(warmup_steps=15, peak_lr=5e-6, decay_steps=240),
+
+        # for faster robot we can train for more steps with a higher learning rate
+        num_train_steps=500,
+        lr_schedule=_optimizer.CosineDecaySchedule(warmup_steps=50, peak_lr=2.5e-5, decay_steps=500),
+        # think about adopting early stopping based on validation performance for future experiments with small datasets like this one
+        log_interval=10,
+        save_interval=50,
+        keep_period=50, # since the dataset is small and we are likely to overfit after a few hundred steps, we want to keep all checkpoints for later analysis
+        policy_metadata={"reset_pose": [0.014956191182136536, -0.7276245951652527, -0.013290399685502052, -2.630627393722534, -0.002800906077027321, 1.8845188617706299, 0.7778761386871338]}
+    ),
+    TrainConfig(
         name="pi05_panda_vel_finetune",
         
         # 1. Tell the model to use LoRA variants
