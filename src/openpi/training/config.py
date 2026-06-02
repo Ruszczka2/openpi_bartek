@@ -1020,24 +1020,18 @@ _CONFIGS = [
             max_token_len=180
         ),
         data=LeRobotPandaDataConfig(
-            repo_id="Ruszczka/fast_3_tasks_merged",
+            repo_id="Ruszczka/fast_3_tasks_multilingual_v1",
             base_config=DataConfig(prompt_from_task=True),
             assets=AssetsConfig(
-                assets_dir="gs://openpi-assets/checkpoints/pi05_base/assets", # reuse the original pi05 norm stats
-                # assets_dir="gs://openpi-assets/checkpoints/pi05_droid/assets",  # reuse the original droid norm stats since we are using the droid asset for this dataset
-
-                # asset_id="franka",
+                assets_dir="gs://openpi-assets/checkpoints/pi05_base/assets",
                 asset_id="droid",
-                # check franka for asset_id if you are using the original panda dataset with 7-dim joint position actions; 
-                # check droid if you are using the new droid dataset with 7-dim joint velocity actions
             ),
         ),
         project_name="physical-ai-panda",
-
         weight_loader=weight_loaders.CheckpointWeightLoader("gs://openpi-assets/checkpoints/pi05_base/params"),
         batch_size=16,
         num_train_steps=1000,
-        lr_schedule=_optimizer.CosineDecaySchedule(warmup_steps=50, peak_lr=2.5e-5, decay_steps=500),
+        lr_schedule=_optimizer.CosineDecaySchedule(warmup_steps=50, peak_lr=2.5e-5, decay_steps=1000),
         log_interval=10,
         save_interval=200,
         keep_period=200,
