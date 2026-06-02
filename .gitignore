@@ -144,6 +144,9 @@ venv.bak/
 # Rope project settings
 .ropeproject
 
+# Config
+pyrightconfig.json
+
 # mkdocs documentation
 /site
 

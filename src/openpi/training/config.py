@@ -1035,21 +1035,12 @@ _CONFIGS = [
         project_name="physical-ai-panda",
 
         weight_loader=weight_loaders.CheckpointWeightLoader("gs://openpi-assets/checkpoints/pi05_base/params"),
-        # weight_loader=weight_loaders.CheckpointWeightLoader("gs://openpi-assets/checkpoints/pi05_droid/params"),
-        # short training with frequent saves so we can pick out a checkpoint that generalizes well to the target 
-        # task before overfitting occurs.
         batch_size=16,
-        # for slower robot
-        # num_train_steps=240,
-        # lr_schedule=_optimizer.CosineDecaySchedule(warmup_steps=15, peak_lr=5e-6, decay_steps=240),
-
-        # for faster robot we can train for more steps with a higher learning rate
-        num_train_steps=500,
+        num_train_steps=1000,
         lr_schedule=_optimizer.CosineDecaySchedule(warmup_steps=50, peak_lr=2.5e-5, decay_steps=500),
-        # think about adopting early stopping based on validation performance for future experiments with small datasets like this one
         log_interval=10,
-        save_interval=50,
-        keep_period=50, # since the dataset is small and we are likely to overfit after a few hundred steps, we want to keep all checkpoints for later analysis
+        save_interval=200,
+        keep_period=200,
         policy_metadata={"reset_pose": [0.014956191182136536, -0.7276245951652527, -0.013290399685502052, -2.630627393722534, -0.002800906077027321, 1.8845188617706299, 0.7778761386871338]}
     ),
     TrainConfig(
