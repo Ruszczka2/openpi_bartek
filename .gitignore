@@ -1,5 +1,8 @@
 # Data directories.
-assets/
+assets/*
+!assets/**/
+!assets/pi05_panda_multi/fast_3_tasks_multilingual_v1/norm_stats.json
+
 checkpoints/
 data/
 wandb
